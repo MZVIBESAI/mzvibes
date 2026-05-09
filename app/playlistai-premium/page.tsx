@@ -10,7 +10,11 @@ export default function PlaylistAIPremium() {
 
   const [loading, setLoading] = useState(false);
 
-  const [tracks, setTracks] = useState<any[]>([
+  const [sortBy, setSortBy] = useState("default");
+
+  const [hasAnalyzed, setHasAnalyzed] = useState(false);
+
+const [tracks, setTracks] = useState<any[]>([
     {
       artist: "Drake",
       title: "One Dance",
@@ -62,6 +66,10 @@ export default function PlaylistAIPremium() {
 
   const handleImage = (file: File) => {
 
+    setTracks([]);
+
+    setHasAnalyzed(false);
+
     const imageUrl = URL.createObjectURL(file);
 
     setPreview(imageUrl);
@@ -106,11 +114,13 @@ export default function PlaylistAIPremium() {
 
       const data = await response.json();
 
-      if (data.tracks) {
+    if (data.tracks) {
 
-        setTracks(data.tracks);
+  setTracks(data.tracks);
 
-      }
+  setHasAnalyzed(true);
+
+}
 
     } catch (error) {
 
@@ -121,6 +131,108 @@ export default function PlaylistAIPremium() {
     setLoading(false);
 
   };
+
+const playlistColors: Record<string, string> = {
+
+  "Pop": "bg-pink-500/20 text-pink-300",
+
+  "Pop Hits": "bg-pink-500/20 text-pink-300",
+
+  "Pop Mainstream": "bg-purple-500/20 text-purple-300",
+
+  "Pop Retro": "bg-purple-500/20 text-purple-300",
+
+  "EDM Festival": "bg-cyan-500/20 text-cyan-300",
+
+  "House Club": "bg-cyan-500/20 text-cyan-300",
+
+  "Afro Dance": "bg-orange-500/20 text-orange-300",
+
+  "RnB": "bg-violet-500/20 text-violet-300",
+
+  "Hip-Hop": "bg-red-500/20 text-red-300",
+
+  "Love Songs": "bg-rose-500/20 text-rose-300",
+
+  "Acoustic": "bg-yellow-500/20 text-yellow-300",
+
+  "Indie": "bg-emerald-500/20 text-emerald-300",
+
+};
+
+const sortedTracks = [...tracks].sort((a, b) => {
+
+  if (sortBy === "bpm") {
+    return b.bpm - a.bpm;
+  }
+
+  if (sortBy === "energy") {
+    return b.energy - a.energy;
+  }
+
+  if (sortBy === "artist") {
+    return a.artist.localeCompare(b.artist);
+  }
+
+  if (sortBy === "playlist") {
+    return a.playlist.localeCompare(b.playlist);
+  }
+
+  return 0;
+
+});
+
+const exportCSV = () => {
+
+  const headers = [
+    "Artist",
+    "Track",
+    "Main Playlist",
+    "Also Fits",
+    "BPM",
+    "Energy",
+    "Mood",
+    "Context",
+  ];
+
+  const rows = tracks.map((track) => [
+
+    track.artist,
+    track.title,
+    track.playlist,
+    track.alsoFits,
+    track.bpm,
+    track.energy,
+    track.mood,
+    track.context,
+
+  ]);
+
+  const csvContent = [
+
+    headers.join(","),
+
+    ...rows.map((row) => row.join(","))
+
+  ].join("\n");
+
+  const blob = new Blob([csvContent], {
+
+    type: "text/csv;charset=utf-8;",
+
+  });
+
+  const url = URL.createObjectURL(blob);
+
+  const link = document.createElement("a");
+
+  link.href = url;
+
+  link.download = "playlist-analysis.csv";
+
+  link.click();
+
+};
 
   return (
 
@@ -143,7 +255,23 @@ export default function PlaylistAIPremium() {
         <div className="max-w-2xl mx-auto mb-14">
 
           <label
-            className="
+  onDragOver={(e) => {
+    e.preventDefault();
+  }}
+
+  onDrop={(e) => {
+
+    e.preventDefault();
+
+    const file = e.dataTransfer.files?.[0];
+
+    if (file) {
+      handleImage(file);
+    }
+
+  }}
+
+  className="
               border-2 border-dashed border-zinc-700
               hover:border-zinc-500
               transition-all duration-300
@@ -169,62 +297,123 @@ export default function PlaylistAIPremium() {
               }}
             />
 
-            {!preview ? (
+ {hasAnalyzed ? (
 
-              <>
+  <div className="text-center">
 
-                <p className="text-2xl mb-3">
-                  🎧
-                </p>
+    <p className="text-white text-lg font-medium">
+      Analyze another playlist
+    </p>
 
-                <p className="text-white font-medium text-lg">
-                  Upload Playlist Screenshot
-                </p>
+    <p className="text-zinc-500 text-sm mt-2">
+      Drag & drop or click to upload a new screenshot
+    </p>
 
-                <p className="text-zinc-500 text-sm mt-2">
-                  Spotify • Apple Music • Rekordbox • Serato
-                </p>
+  </div>
 
-              </>
+) : !preview ? (
 
-            ) : (
+  <>
 
-              <div className="w-full">
+    <p className="text-2xl mb-3">
+      🎧
+    </p>
 
-                <img
-                  src={preview}
-                  alt="preview"
-                  className="rounded-2xl w-full max-h-[500px] object-cover"
-                />
+    <p className="text-white font-medium text-lg">
+      Upload Playlist Screenshot
+    </p>
 
-              </div>
+    <p className="text-zinc-500 text-sm mt-2">
+      Spotify • Apple Music • Rekordbox • Serato
+    </p>
 
-            )}
+  </>
+
+) : (
+
+  <div className="w-full">
+
+    <img
+      src={preview}
+      alt="preview"
+      className="rounded-2xl w-full max-h-[500px] object-cover"
+    />
+
+  </div>
+
+)}
 
           </label>
 
-          <div className="flex justify-center mt-6">
+        {!hasAnalyzed && (
 
-            <button
-              onClick={analyzePlaylist}
-              disabled={loading}
-              className="
-                bg-white text-black
-                px-8 py-3 rounded-full
-                font-medium
-                hover:scale-105
-                transition-all duration-300
-                disabled:opacity-50
-              "
-            >
+  <div className="flex justify-center mt-6">
 
-              {loading ? "Analyzing..." : "Analyze Playlist"}
+    <button
+      onClick={analyzePlaylist}
+      disabled={loading}
+      className="
+        bg-white text-black
+        px-8 py-3 rounded-full
+        font-medium
+        hover:scale-105
+        transition-all duration-300
+        disabled:opacity-50
+      "
+    >
 
-            </button>
+      {loading ? "Analyzing..." : "Analyze Playlist"}
 
-          </div>
+    </button>
+
+  </div>
+
+)}
 
         </div>
+<div className="flex justify-end items-center gap-3 mb-4">
+
+    <button
+  onClick={exportCSV}
+  className="
+    bg-zinc-900
+    border border-zinc-800
+    text-zinc-300
+    rounded-xl
+    px-4 py-2
+    text-sm
+    hover:bg-zinc-800
+    transition-all duration-300
+  "
+>
+
+  Export CSV
+
+</button>
+
+  <select
+    value={sortBy}
+    onChange={(e) => setSortBy(e.target.value)}
+    className="
+      bg-zinc-900
+      border border-zinc-800
+      text-zinc-300
+      rounded-xl
+      px-4 py-2
+      text-sm
+      outline-none
+    "
+  >
+
+    <option value="default">Default</option>
+    <option value="bpm">BPM</option>
+    <option value="energy">Energy</option>
+    <option value="artist">Artist</option>
+    <option value="playlist">Playlist</option>
+
+  </select>
+
+</div>
 
         <div className="overflow-x-auto">
 
@@ -242,7 +431,7 @@ export default function PlaylistAIPremium() {
 
             </div>
 
-            {tracks.map((track, index) => (
+{sortedTracks.map((track, index) => (
 
               <div
                 key={index}
@@ -259,7 +448,12 @@ export default function PlaylistAIPremium() {
 
                 <div>
 
-                  <span className={`${track.color} px-3 py-1 rounded-full text-sm`}>
+<span
+  className={`
+    ${playlistColors[track.playlist] || "bg-zinc-700 text-zinc-200"}
+    px-3 py-1 rounded-full text-sm
+  `}
+>
                     {track.playlist}
                   </span>
 
@@ -313,6 +507,12 @@ export default function PlaylistAIPremium() {
           </div>
 
         </div>
+
+        <p className="text-zinc-500 text-sm text-center mt-6 leading-relaxed max-w-3xl mx-auto">
+  There is no strict limit to the number of tracks that can be analyzed from a single screenshot.
+  However, analysis accuracy depends on the screenshot quality, text visibility, and spacing between tracks.
+  For the most accurate and consistent results, screenshots containing up to 30 tracks are recommended.
+</p>
 
       </div>
 

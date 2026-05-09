@@ -49,10 +49,24 @@ Format:
 ]
 
 Rules:
+You MUST choose ONLY from these playlist names:
+
+- Afro Dance
+- Pop Mainstream
+- Pop Retro
+- EDM Festival
+- House Club
+- Love Songs
+- Hip-Hop
+- RnB
+- Acoustic
+- Indie
+- Pop Hits
+
+Do NOT invent new playlist names.
 
 - BPM must be realistic
 - Energy must be from 1 to 10
-- Playlist names should sound like real DJ playlists
 - Keep mood short
 - Keep context short
 - No markdown
