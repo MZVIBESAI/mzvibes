@@ -49,6 +49,7 @@ Format:
 ]
 
 Rules:
+
 You MUST choose ONLY from these playlist names:
 
 - Afro Dance
@@ -76,8 +77,9 @@ Do NOT invent new playlist names.
             },
 
             {
-              type: "input_image",
-              image_url: image,
+             type: "input_image",
+             image_url: image,
+             detail: "auto",
             },
 
           ],
